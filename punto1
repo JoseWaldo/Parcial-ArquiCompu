@@ -14,63 +14,67 @@ main:
     # Cargo length
     lw $s2, length
     # Cargo mayor
-    lw $t0, mayor
+    li $t0, 0
     # Contador de posiciones
     li $s0, 0
+    #Mayor valor absoluto
+    li $t7, 0
+    #Variable bandera, 0 para 
+    #li $t6,0
 
-#whileMayor:
-#    bge $s0, $s2, exit     # Si s0 >= s2, termina el bucle
-#    # Calcular la direcciï¿½n del elemento en el array
-#    mul $t1, $s0, 4        # Multiplicar el ï¿½ndice por 4 (tamaï¿½o de palabra)
-#    add $t1, $t1, $s1      # Sumar la direcciï¿½n base del array
-#    lw $t3, 0($t1)         # Cargar el valor del elemento en $t3
-#    jal printNumber
-
-#    bgt $t3, $t0, mayorQue    # Si t3 > t0, ir a mayorQue
-#    addi $s0, $s0, 1          # Incrementar el contador de posiciï¿½n
-#    j whileMayor              # Volver al inicio del bucle
-
-#whileMultiploCuatro:
-#    bge $s0, $s2, exit     # Si s0 >= s2, termina el bucle
-#    # Calcular la direcciï¿½n del elemento en el array
-#    mul $t1, $s0, 4        # Multiplicar el ï¿½ndice por 4 (tamaï¿½o de palabra)
-#    add $t1, $t1, $s1      # Sumar la direcciï¿½n base del array
-#    lw $t3, 0($t1)         # Cargar el valor del elemento en $t3
-#    jal printNumber
-#   
-#    li $t4,4
-#    div $t3,$t4
-#    mfhi $t5
-#    
-#    
-#    beqz $t5, aumentarContadorMultiplo    # Si el residuo t5 es cero
-#    addi $s0, $s0, 1          		# Incrementar el contador de posiciï¿½n
-#    j whileMultiploCuatro 
-
-
-whileAbsoluto:
+while:
     bge $s0, $s2, exit     # Si s0 >= s2, termina el bucle
     # Calcular la direcciï¿½n del elemento en el array
-    mul $t1, $s0, 4        # Multiplicar el ï¿½ndice por 4 (tamaï¿½o de palabra)
-    add $t1, $t1, $s1      # Sumar la direcciï¿½n base del array
-    lw $t3, 0($t1)         # Cargar el valor del elemento en $t3
+    mul $t6, $s0, 4        # Multiplicar el ï¿½ndice por 4 (tamaï¿½o de palabra)
+    add $t6, $t6, $s1      # Sumar la direcciï¿½n base del array
+    lw $t3, 0($t6)         # Cargar el valor del elemento en $t3
     jal printNumber
-    abs $t3,$t3
 
-    bgt $t3, $t0, mayorQue    # Si t3 > t0, ir a mayorQue
+
+    #Todas las operaciones acá
+    
+    
+    #Mayor de todo el array
+    jal mayorQue    
+    
+    
+    #Multiplos de 4
+    li $t4,4
+    div $t3,$t4
+    mfhi $t5
+    jal validarMultiplo
+    
+
+    #Mayor valor absoluto
+    abs $t3,$t3
+    jal mayorAbsoluto     
+    
+    
     addi $s0, $s0, 1          # Incrementar el contador de posiciï¿½n
-    j whileAbsoluto              # Volver al inicio del bucle
+    j while                    # Volver al inicio del bucle
+
 
 exit:
-   
-
     li $v0, 10             # Finalizar el programa
     syscall
 
 mayorQue:
+    bgt $t3, $t0, setMayor
+    jr $ra                # Volver al llamado del while
+
+
+setMayor:
     move $t0, $t3          # Almacenar el elemento actual como el nuevo mayor
-    addi $s0, $s0, 1       # Incrementar el contador de posiciï¿½n
-    j whileAbsoluto           # Volver al inicio del bucle
+    jr $ra                # Volver al llamado del while
+
+
+mayorAbsoluto:
+    bgt $t3, $t7, setMayorAbsoluto
+    jr $ra                # Volver al llamado del while
+
+setMayorAbsoluto:
+    move $t2, $t3          # Almacenar el elemento actual como el nuevo mayor
+    jr $ra  		   # Volver al llamado del while
 
 printNumber:
     li $v0, 1              # Imprimir un entero
@@ -83,13 +87,61 @@ printNumber:
 
     jr $ra                 # Volver a la llamada
 
-#aumentarContadorMultiplo:
-#	la $t3, multiplosCuatro
-#	lw $t4, 0($t3)
-#	addi $t4,$t4,1
-#	sw $t4,0($t3)
-#	move $t1,$t4
-#	j whileMultiploCuatro 
-#	
-
+validarMultiplo:
+	beqz $t5, aumentarContadorMultiplo
+	jr $ra           # Volver al llamado del while
 	
+aumentarContadorMultiplo:
+ 	addi $sp,$sp, -4		#Guardar numero actual del array (t3)
+    	sw $t3, 0($sp)                  #Guardar en pila t3	
+	la $t3, multiplosCuatro
+	lw $t4, 0($t3)
+	addi $t4,$t4,1
+	sw $t4,0($t3)
+	move $t1,$t4
+	
+	#Setear nuevamente el inicio de a1 que guardamos en la pila (t3)
+   	lw $t3, 0($sp)
+    	addi $sp,$sp, 4
+	jr $ra                # Volver al llamado del while
+	
+
+
+
+
+
+
+
+
+
+
+
+#whileMultiploCuatro:
+#    bge $s0, $s2, exit     # Si s0 >= s2, termina el bucle
+#    # Calcular la direcciï¿½n del elemento en el array
+#    mul $t1, $s0, 4        # Multiplicar el ï¿½ndice por 4 (tamaï¿½o de palabra)
+#    add $t1, $t1, $s1      # Sumar la direcciï¿½n base del array
+#    lw $t3, 0($t1)         # Cargar el valor del elemento en $t3
+#    jal printNumber
+#   
+#   li $t4,4
+#    div $t3,$t4
+#    mfhi $t5   
+#    beqz $t5, aumentarContadorMultiplo    # Si el residuo t5 es cero
+#    addi $s0, $s0, 1          		# Incrementar el contador de posiciï¿½n
+#    j whileMultiploCuatro 
+
+
+#whileAbsoluto:
+#    bge $s0, $s2, exit     # Si s0 >= s2, termina el bucle
+#    # Calcular la direcciï¿½n del elemento en el array
+#    mul $t1, $s0, 4        # Multiplicar el ï¿½ndice por 4 (tamaï¿½o de palabra)
+#    add $t1, $t1, $s1      # Sumar la direcciï¿½n base del array
+#    lw $t3, 0($t1)         # Cargar el valor del elemento en $t3
+#    jal printNumber
+#    abs $t3,$t3
+
+#    bgt $t3, $t0, mayorQue    # Si t3 > t0, ir a mayorQue
+#    addi $s0, $s0, 1          # Incrementar el contador de posiciï¿½n
+#    j whileAbsoluto              # Volver al inicio del bucle
+
